@@ -12,23 +12,23 @@ with open('data.csv', 'rb') as f:
             a[b] = float(a[b])
 
 def make_split(prev, data, comparison):
-# FIND RANDOM THRESHOLD POINT CODE
+    # FIND RANDOM THRESHOLD POINT CODE
     feature = 0
     while feature in prev or feature == 0: # RANDOM FEATURE NOT USED PREVIOUSLY
-        feature = random.randint(1,4) 
-    findmaxandmin = [] # FIND RANDOM THRESHOLD
+        feature = random.randint(1,4)
+    print "Chose feature #%s!" % (feature) 
+    featurelist = [] # FIND RANDOM THRESHOLD
     for e in data:
-        findmaxandmin.append(e[feature])
-#        print e[feature]
-#    print findmaxandmin
-    mini, maxi = min(findmaxandmin), max(findmaxandmin)
-    total=0
-    prev_total=2000 # SET UP VARIABLES SO WHILE LOOP DOESNT ERROR OUT
+        featurelist.append(e[feature])
+
+    total = 0
+    prev_total = 2000 # SET UP VARIABLES SO WHILE LOOP DOESNT ERROR OUT
     loops = 0
-    threshold = random.randint(round(mini), round(maxi)) # FINALLY DEFINE RANDOM THRESHOLD
+    threshold=statistics.mean(featurelist)
     improvement=0
+
     while improvement >= 0: # BEGIN "TRAINING" WHILE LOOP
-        print improvement
+        print "Improvement this round was %s" % improvement
         if loops != 0:
             threshold=prev-10 # ARBITRARY, MIGHT INCLUDE ADDITION, BUT DECREASES THRESHOLD BY STEPS
         exo=[]
@@ -44,10 +44,10 @@ def make_split(prev, data, comparison):
                     exo.append(e)
                 else:
                     non.append(e)
-        labels_exo=[] 
+        labels_exo=[]
         for i in exo: # FINDS LABELS OF EVERYTHING IN EXO PILE
             labels_exo.append(i[0])
-        if len(labels_exo)>2: 
+        if len(labels_exo)>2:
             exo_accuracy = statistics.stdev(labels_exo) # FIND ACCURACY OF SORT
         else:
             exo_accuracy = 999
@@ -59,8 +59,20 @@ def make_split(prev, data, comparison):
         else:
             non_accuracy = 999
         total = exo_accuracy + non_accuracy
+        if len(labels_exo)<0.2*len(labels_non) and loops > 5:
+            print "Split is too unbalanced at loop %s! Stopping..." % loops
+            break
         improvement = prev_total-total
-        if improvement==0 and prev_improvement==0: # STOP IT FROM GETTING STUCK AT 0 IMPROVEMENT
+        prev_switched=False
+        if improvement==0 and prev_improvement==0 and loops < 5 and prev_switched != True:
+            print "Improvement rates are at 0! Switching threshold direction."
+            if comparison == "more":
+                comparison = "less"
+            if comparison == "less":
+                comparison = "more"
+            prev_switched=True
+        if improvement==0 and prev_improvement==0 and loops > 5: # STOP IT FROM GETTING STUCK AT 0 IMPROVEMENT
+            print "Improvement rates have continued to hit 0 at loop %s! Stopping..." % loops
             break
         prev = threshold
         prev_total = total
@@ -85,11 +97,10 @@ def make_split(prev, data, comparison):
 #    return everything
 
 
-
 comparisons=['less', 'more']
 current = make_split([], data, comparisons[random.randint(0,1)])
-print 'final accuracies'
-print current[4], current[5]
+print 'Exoplanet pile has accuracy of %s for %s items, and non-exoplanet pile has accuracy of %s for %s items.' % (current[4], len(current[2]), current[5], len(current[3]))
+#print current[1]
 #print "hi"
 #print len(make_tree(3, current, [], 1))
 
