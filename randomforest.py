@@ -4,7 +4,7 @@ import csv
 
 # READ FEATURES FROM FILE
 
-with open('output.csv', 'rb') as f:
+with open('data.csv', 'rb') as f:
     reader = csv.reader(f)
     data = list(reader)
     for a in data:
