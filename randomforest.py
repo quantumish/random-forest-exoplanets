@@ -83,18 +83,18 @@ def make_split(prev, data, comparison):
 
 # BUGGY RECURSION BELOW:
 
-#def make_tree(depth_limit, current, everything, loops):
-#    comparisons=['less', 'more']
-#    for e in current[0:2]:
-#        print "LOOP" + str(loops)
-#        if loops >= depth_limit:
-#            print 'DEPTH_EXCEEDED'
-#            break
-#        half = make_split([current[-1]], e, comparisons[random.randint(0,1)])
-#        everything.append(half)
-#        make_tree(depth_limit, half, everything, loops+1)
-#    print 'SHOULD OUTPUT BELOW AND STOP'
-#    return everything
+def make_tree(depth_limit, current, everything, loops):
+    comparisons=['less', 'more']
+    for e in current[0:2]:
+        print "Starting loop %s" % loops
+        if loops >= depth_limit:
+            print 'Depth limit exceeded! Stopping...'
+            break
+        half = make_split([current[-1]], e, comparisons[random.randint(0,1)])
+        everything.append(half)
+        make_tree(depth_limit, half, everything, loops+1)
+    print 'Done!'
+    return everything
 
 
 comparisons=['less', 'more']
@@ -102,6 +102,6 @@ current = make_split([], data, comparisons[random.randint(0,1)])
 print 'Exoplanet pile has accuracy of %s for %s items, and non-exoplanet pile has accuracy of %s for %s items.' % (current[4], len(current[2]), current[5], len(current[3]))
 #print current[1]
 #print "hi"
-#print len(make_tree(3, current, [], 1))
-
+for e in make_tree(3, current, [], 1):
+    print e[4], e[5]
 
