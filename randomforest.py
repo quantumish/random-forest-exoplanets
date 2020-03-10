@@ -11,11 +11,10 @@ with open('data.csv', 'rb') as f:
         for b, c in enumerate(a):
             a[b] = float(a[b])
 
-def make_split(prev, data, comparison):
+def make_split(data, comparison, loop):
     # FIND RANDOM THRESHOLD POINT CODE
     feature = 0
-    while feature in prev or feature == 0: # RANDOM FEATURE NOT USED PREVIOUSLY
-        feature = random.randint(1,4)
+    feature = random.randint(1,4)
     print "Chose feature #%s!" % (feature) 
     featurelist = [] # FIND RANDOM THRESHOLD
     for e in data:
@@ -78,7 +77,7 @@ def make_split(prev, data, comparison):
         prev_total = total
         prev_improvement = improvement
         loops=loops+1
-    return [exo, non, labels_exo, labels_non, exo_accuracy, non_accuracy, feature]
+    return [exo, non, labels_exo, labels_non, exo_accuracy, non_accuracy, loop]
 
 
 # BUGGY RECURSION BELOW:
@@ -90,17 +89,33 @@ def make_tree(depth_limit, current, everything, loops):
         if loops >= depth_limit:
             print 'Depth limit exceeded! Stopping...'
             break
-        half = make_split([current[-1]], e, comparisons[random.randint(0,1)])
+        half = make_split(e, comparisons[random.randint(0,1)],loops)
         everything.append(half)
         make_tree(depth_limit, half, everything, loops+1)
     print 'Done!'
     return everything
 
 
+
 comparisons=['less', 'more']
-current = make_split([], data, comparisons[random.randint(0,1)])
+current = make_split(data, comparisons[random.randint(0,1)], 0)
 depth_limit=input("Depth limit? ")
-output=make_tree(depth_limit, current, [], 1)[-(2**(depth_limit)):]
+tree=make_tree(depth_limit, current, [], 1)[-(2**(depth_limit-1)):]
+
+targets=[]
+i=2**(depth_limit-2)+1
+while i < (2**(depth_limit-1)+1):
+   targets.append(i)
+   i+=1
+output=[]
+for e in tree:
+    print e[-1]
+    if e[-1] in targets:
+        print "Valid node located, identifier %s" % e[-1]
+        output.append(e)
+
+print len(output)
+
 print '\nOriginal exoplanet pile has accuracy of %s for %s items, and original non-exoplanet pile has accuracy of %s for %s items.\n' % (current[4], len(current[2]), current[5], len(current[3]))
 
 
