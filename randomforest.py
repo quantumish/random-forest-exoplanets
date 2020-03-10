@@ -99,9 +99,15 @@ def make_tree(depth_limit, current, everything, loops):
 
 comparisons=['less', 'more']
 current = make_split([], data, comparisons[random.randint(0,1)])
-print 'Exoplanet pile has accuracy of %s for %s items, and non-exoplanet pile has accuracy of %s for %s items.' % (current[4], len(current[2]), current[5], len(current[3]))
-#print current[1]
-#print "hi"
-for e in make_tree(3, current, [], 1):
-    print e[4], e[5]
+depth_limit=input("Depth limit? ")
+output=make_tree(depth_limit, current, [], 1)[-(2**(depth_limit)):]
+print '\nOriginal exoplanet pile has accuracy of %s for %s items, and original non-exoplanet pile has accuracy of %s for %s items.\n' % (current[4], len(current[2]), current[5], len(current[3]))
+
+
+total=0
+for e in output:
+    print "Exoplanet accuracy is %s for %s items. Non-exoplanet accuracy is %s for %s items" % (e[4],len(e[2]),e[5],len(e[3]))
+    total=total+len(e[2])+len(e[3])
+
+print total, len(data)
 
