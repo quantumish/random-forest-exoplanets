@@ -25,6 +25,7 @@ def make_split(data, comparison, loop):
     loops = 0
     threshold=statistics.mean(featurelist)
     improvement=0
+    error_flag=False
 
     while improvement >= 0: # BEGIN "TRAINING" WHILE LOOP
         print "Improvement this round was %s" % improvement
@@ -48,15 +49,23 @@ def make_split(data, comparison, loop):
             labels_exo.append(i[0])
         if len(labels_exo)>2:
             exo_accuracy = statistics.stdev(labels_exo) # FIND ACCURACY OF SORT
+        elif len(labels_exo)==1 or len(labels_exo)==0:
+            exo_accuracy = 0.0
+        elif labels_exo[0]==labels_exo[1]:
+            exo_accuracy = 0.0
         else:
-            exo_accuracy = 999
+            exo_accuracy = 0.5
         labels_non=[]
         for i in non: # FINDS LABELS OF EVERYTHING IN NON PILE
             labels_non.append(i[0])
         if len(labels_non)>2:
             non_accuracy = statistics.stdev(labels_non) # FIND ACCURACY OF SORT
+        elif len(labels_non)==1 or len(labels_non)==0:
+            non_accuracy = 0.0
+        elif labels_non[0]==labels_non[1]:
+            non_accuracy = 0.0
         else:
-            non_accuracy = 999
+            non_accuracy = 0.5
         total = exo_accuracy + non_accuracy
         if len(labels_exo)<0.2*len(labels_non) and loops > 5:
             print "Split is too unbalanced at loop %s! Stopping..." % loops
@@ -100,21 +109,14 @@ def make_tree(depth_limit, current, everything, loops):
 comparisons=['less', 'more']
 current = make_split(data, comparisons[random.randint(0,1)], 0)
 depth_limit=input("Depth limit? ")
-tree=make_tree(depth_limit, current, [], 1)[-(2**(depth_limit-1)):]
+tree=make_tree(depth_limit, current, [], 1)
 
-targets=[]
-i=2**(depth_limit-2)+1
-while i < (2**(depth_limit-1)+1):
-   targets.append(i)
-   i+=1
 output=[]
 for e in tree:
-    print e[-1]
-    if e[-1] in targets:
+    print "Found node with identifier %s" % e[-1]
+    if e[-1] >= depth_limit-1:
         print "Valid node located, identifier %s" % e[-1]
         output.append(e)
-
-print len(output)
 
 print '\nOriginal exoplanet pile has accuracy of %s for %s items, and original non-exoplanet pile has accuracy of %s for %s items.\n' % (current[4], len(current[2]), current[5], len(current[3]))
 
