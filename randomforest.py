@@ -11,11 +11,11 @@ with open('data.csv', 'rb') as f:
         for b, c in enumerate(a):
             a[b] = float(a[b])
 
-def make_split(data, comparison, loop):
+def make_split(data, comparison, loop, leaf):
     # FIND RANDOM THRESHOLD POINT CODE
     feature = 0
     feature = random.randint(1,4)
-    print "Chose feature #%s!" % (feature) 
+    print ("Chose feature #%s!") % (feature)
     featurelist = [] # FIND RANDOM THRESHOLD
     for e in data:
         featurelist.append(e[feature])
@@ -28,7 +28,7 @@ def make_split(data, comparison, loop):
     error_flag=False
 
     while improvement >= 0: # BEGIN "TRAINING" WHILE LOOP
-        print "Improvement this round was %s" % improvement
+        print ("Improvement this round was %s") % improvement
         if loops != 0:
             threshold=prev-10 # ARBITRARY, MIGHT INCLUDE ADDITION, BUT DECREASES THRESHOLD BY STEPS
         exo=[]
@@ -68,63 +68,59 @@ def make_split(data, comparison, loop):
             non_accuracy = 0.5
         total = exo_accuracy + non_accuracy
         if len(labels_exo)<0.2*len(labels_non) and loops > 5:
-            print "Split is too unbalanced at loop %s! Stopping..." % loops
+            print ("Split is too unbalanced at loop %s! Stopping...") % loops
             break
         improvement = prev_total-total
         prev_switched=False
         if improvement==0 and prev_improvement==0 and loops < 5 and prev_switched != True:
-            print "Improvement rates are at 0! Switching threshold direction."
+            print ("Improvement rates are at 0! Switching threshold direction.")
             if comparison == "more":
                 comparison = "less"
             if comparison == "less":
                 comparison = "more"
             prev_switched=True
         if improvement==0 and prev_improvement==0 and loops > 5: # STOP IT FROM GETTING STUCK AT 0 IMPROVEMENT
-            print "Improvement rates have continued to hit 0 at loop %s! Stopping..." % loops
+            print ("Improvement rates have continued to hit 0 at loop %s! Stopping...") % loops
             break
         prev = threshold
         prev_total = total
         prev_improvement = improvement
         loops=loops+1
-    return [exo, non, labels_exo, labels_non, exo_accuracy, non_accuracy, loop]
-
-
-# BUGGY RECURSION BELOW:
+    return [exo, non, labels_exo, labels_non, exo_accuracy, non_accuracy, leaf, loop]
 
 def make_tree(depth_limit, current, everything, loops):
     comparisons=['less', 'more']
     for e in current[0:2]:
-        print "Starting loop %s" % loops
+        print ("Starting loop %s") % loops
         if loops >= depth_limit:
-            print 'Depth limit exceeded! Stopping...'
+            print ('Depth limit exceeded! Stopping...')
+            current[6]=True
             break
-        half = make_split(e, comparisons[random.randint(0,1)],loops)
+        if len(current[0])<1or len(current[1])<1:
+            print ('Cannot split list of size <1! Stopping...')
+            current[6]=True
+            break
+        half = make_split(e, comparisons[random.randint(0,1)],loops, False)
         everything.append(half)
         make_tree(depth_limit, half, everything, loops+1)
-    print 'Done!'
+    print ('Done!')
     return everything
 
-
-
 comparisons=['less', 'more']
-current = make_split(data, comparisons[random.randint(0,1)], 0)
+current = make_split(data, comparisons[random.randint(0,1)], 0, False)
 depth_limit=input("Depth limit? ")
 tree=make_tree(depth_limit, current, [], 1)
 
 output=[]
 for e in tree:
-    print "Found node with identifier %s" % e[-1]
-    if e[-1] >= depth_limit-1:
-        print "Valid node located, identifier %s" % e[-1]
+    if e[-2] == True:
         output.append(e)
 
-print '\nOriginal exoplanet pile has accuracy of %s for %s items, and original non-exoplanet pile has accuracy of %s for %s items.\n' % (current[4], len(current[2]), current[5], len(current[3]))
-
+print ('\nOriginal exoplanet pile has accuracy of %s for %s items, and original non-exoplanet pile has accuracy of %s for %s items.\n') % (current[4], len(current[2]), current[5], len(current[3]))
 
 total=0
 for e in output:
-    print "Exoplanet accuracy is %s for %s items. Non-exoplanet accuracy is %s for %s items" % (e[4],len(e[2]),e[5],len(e[3]))
+    print ("Exoplanet accuracy is %s for %s items. Non-exoplanet accuracy is %s for %s items") % (e[4],len(e[2]),e[5],len(e[3]))
     total=total+len(e[2])+len(e[3])
 
-print total, len(data)
 
