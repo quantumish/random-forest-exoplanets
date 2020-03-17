@@ -1,7 +1,9 @@
 import statistics
 import random
+from random import sample
 import csv
 import sys
+import math
 
 # Basic implementation of BST-like structure is inspired by and at points flat out modified from https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/
 
@@ -30,8 +32,8 @@ class decision_tree():
         else:
             accuracy = 0.5
         return accuracy
-    def create_split(self, data, comparison):
-        feature = random.randint(1,4) # choose feature for a split
+    def create_split(self, data, comparison, sample):
+        feature = random.choice(sample) # choose feature for a split
         featurelist = [] # lower data down to just the feature-specific data
         for e in data:
             featurelist.append(e[feature])
@@ -41,7 +43,7 @@ class decision_tree():
         loops = 0
         direction=1
         while improvement >= 0:
-            if loops != 0: 
+            if loops != 0:
                 threshold=prev-10 if direction == -1 else prev+10
             exo, non=[], []
             for e in data: # SORTS DATA BY THRESHOLD
@@ -68,7 +70,7 @@ class decision_tree():
             prev_improvement = improvement
             loops=loops+1
         return [exo, non, comparison, feature, threshold]
-    def create_tree(self, depth, current, data, root, loops):
+    def create_tree(self, depth, current, data, root, loops, sample):
         comparisons=['<','>']
         global exited
         exited=False
@@ -95,20 +97,20 @@ class decision_tree():
                 parent=root
                 root=root.right
                 root.parent=parent
-            half = self.create_split(e, comparisons[random.randint(0,1)])
+            half = self.create_split(e, comparisons[random.randint(0,1)], sample)
             data.append(half)
-            self.create_tree(depth, half, data, root, loops+1)
+            self.create_tree(depth, half, data, root, loops+1, sample)
         exited=True
     def inorder(self,root):
         if root:
             self.inorder(root.left)
             print(len(root.data))
             self.inorder(root.right)
-    def __init__(self, depth_limit, data):
+    def __init__(self, depth_limit, data, sample):
         comparisons=['<', '>']
-        current = self.create_split(data, comparisons[random.randint(0,1)])
+        current = self.create_split(data, comparisons[random.randint(0,1)], sample)
         self.root = split(data, current[2], current[3], current[4], "Root")
-        self.create_tree(depth_limit, current, [], self.root, 1)
+        self.create_tree(depth_limit, current, [], self.root, 1, sample)
         print("Decision tree created!")
     def get_root(self):
         return self.root
@@ -117,8 +119,10 @@ class decision_tree():
 
 def random_forest(trees, depth, data):
     forest=[]
+    features=[1,2,3,4]
     for e in range(trees):
-        forest.append(decision_tree(depth, data))
+        subset=sample(features, math.ceil(math.sqrt(len(features))))
+        forest.append(decision_tree(depth, data, subset))
     consensus=[]
     for i in data:
         votes=[]
