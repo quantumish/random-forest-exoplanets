@@ -1,4 +1,3 @@
-# random-forest-for-exoplanets
 # random-forest-exoplanets
 
 ## About
