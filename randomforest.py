@@ -19,20 +19,18 @@ class split():
         self.identifier=identifier
 
 class decision_tree():
-    def check_accuracy(self, pile):
-        labels=[]
-        for i in pile: # FINDS LABELS OF EVERYTHING IN PILE
-            labels.append(i[0])
-        if len(labels)>2:
-            accuracy = statistics.stdev(labels) # FIND ACCURACY OF SORT
-        elif len(labels)==1 or len(labels)==0:
-            accuracy = 0.0
-        elif labels[0]==labels[1]:
-            accuracy = 0.0
-        else:
-            accuracy = 0.5
-        return accuracy
-    def create_split(self, data, comparison, sample):
+    def gini_impurity(self, exo, non):
+        exo_positive, non_positive = 0,0
+        for i in exo: # FINDS LABELS OF EVERYTHING IN PILE
+            if i[0] == 1:
+                exo_positive+=1
+        for i in non:
+            if i[0] == 1:
+                non_positive+=1
+        p1, p2 = exo_positive/(len(exo)+len(non)), non_positive/(len(exo)+len(non))
+        impurity = (p1*(1-p1)) + (p2*(1-p2))
+        return impurity
+    def create_split(self, data, comparison, sample, prev_switched, switch_loop):
         feature = random.choice(sample) # choose feature for a split
         featurelist = [] # lower data down to just the feature-specific data
         for e in data:
@@ -51,19 +49,21 @@ class decision_tree():
                     exo.append(e) if e[feature] > threshold else non.append(e)
                 if comparison == "<":
                     exo.append(e) if e[feature] < threshold else non.append(e)
-            exo_accuracy=self.check_accuracy(exo)
-            non_accuracy=self.check_accuracy(non)
-            total = exo_accuracy + non_accuracy
+            total=self.gini_impurity(exo, non)
             improvement = prev_total-total
-            prev_switched=False
+            if int(sys.argv[4])==1:
+                print ("Improvement this round is %s" % improvement)
             log=[[2, 2]]
             if improvement==0 and prev_improvement==0 and loops > 5 and prev_switched != True:
                 direction = -direction
                 log[0]=[total, threshold]
-            prev_switched=True
-            if improvement==0 and prev_improvement==0 and loops > 5: # STOP IT FROM GETTING STUCK AT 0 IMPROVEMENT
+                print ("Switching directions!")
+                prev_switched=True
+                switch_loop=loops
+            if improvement==0 and prev_improvement==0 and loops > 5 and loops-switch_loop > 3: # STOP IT FROM GETTING STUCK AT 0 IMPROVEMENT
                 if total > log[0][0]:
                     threshold=log[0][1]
+                print ("Giving up...")
                 break
             prev = threshold
             prev_total = total
@@ -97,7 +97,7 @@ class decision_tree():
                 parent=root
                 root=root.right
                 root.parent=parent
-            half = self.create_split(e, comparisons[random.randint(0,1)], sample)
+            half = self.create_split(e, comparisons[random.randint(0,1)], sample, False, 0)
             data.append(half)
             self.create_tree(depth, half, data, root, loops+1, sample)
         exited=True
@@ -108,7 +108,7 @@ class decision_tree():
             self.inorder(root.right)
     def __init__(self, depth_limit, data, sample):
         comparisons=['<', '>']
-        current = self.create_split(data, comparisons[random.randint(0,1)], sample)
+        current = self.create_split(data, comparisons[random.randint(0,1)], sample, False, 0)
         self.root = split(data, current[2], current[3], current[4], "Root")
         self.create_tree(depth_limit, current, [], self.root, 1, sample)
         print("Decision tree created!")
@@ -121,8 +121,9 @@ def random_forest(trees, depth, data):
     forest=[]
     features=[1,2,3,4]
     for e in range(trees):
+        sampled_data=random.choices(data, k=len(data))
         subset=sample(features, math.ceil(math.sqrt(len(features))))
-        forest.append(decision_tree(depth, data, subset))
+        forest.append(decision_tree(depth, sampled_data, subset))
     consensus=[]
     for i in data:
         votes=[]
